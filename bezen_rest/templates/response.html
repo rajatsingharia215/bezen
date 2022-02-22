@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <br>
+
+						<table class="table">
+						<tr>
+                            <th>Fish Id</th>
+							<th>Fish Name</th>
+							<th>Fish Species</th>
+							<th>Weight</th>
+                            <th>length</th>
+                            <th>Lattitude</th>
+                            <th>Longitude</th>
+                            <th>TimeStamp</th>
+                            
+						</tr>
+                        
+
+						{% for i in fishes %}
+							<tr>
+                                <td>{{i.fish_id}}</td>
+								<td>{{i.fish_name}}</td>
+								<td>{{i.fish_species}}</td>
+								<td>{{i.weight}}</td>
+                                <td>{{i.length}}</td>
+                                <td>{{i.lattitude}}</td>
+                                <td>{{i.longitude}}</td>
+                                <td>{{i.timestamp}}</td>
+
+                                
+							</tr>
+						{% endfor %}
+						
+					</table>
+                    <div style="width: 60%; text-align: center;">Resized Image</div>
+                    <div>
+                    {% for i in fishes %}
+                    <div>{{i.img}}</div>
+                    {% endfor %}
+                    </div>
+			
+
+</body>
+</html>
