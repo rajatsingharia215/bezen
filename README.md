@@ -1,8 +1,12 @@
 allowed hosts:  localhost, 127.0.0.1
 
 SECRET KEY has not been provided so as to follow good practices
+<<<<<<< HEAD
 
 portno means any port eg 8000,3000 etc
+=======
+portno can be any port eg:8000,3000 etc
+>>>>>>> de66fbc4246d333642f90d126b428de39b819630
 routes
 1. http://127.0.0.1:portno/ or http://127.0.0.1:portno/addrecord 
 A simple HTML page that asks for Fish name , species,weight,length,latitude,longitude and the image and after filling them and clicking on save button a response comes up saying "record added"
