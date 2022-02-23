@@ -1,6 +1,7 @@
 from django.db import connection
 from django.shortcuts import redirect, render
 from .models import Fish
+from .models import ProcessedFish
 import json
 from django.http import HttpResponse
 import requests
@@ -9,15 +10,14 @@ from django.views.decorators.csrf import csrf_exempt
 import django.template.loader
 from .forms import ImageForm 
 import os
-from redis import Redis
-from rq import Queue
+
 import numpy as np
 import cv2
 
-from redis import Redis
-from rq import Queue
+
 import threading
-# queue = Queue(connection=Redis())
+
+import base64
 from datetime import datetime
 @csrf_exempt
 def addrecord(request):
@@ -26,52 +26,75 @@ def addrecord(request):
     if(request.method=='POST'):
         form = ImageForm(request.POST,request.FILES)
         if form.is_valid():
-            # form.save()
-            print(request.POST)
+
             newfish = Fish()
+            obj = ProcessedFish()
             newfish.fish_name = request.POST.get('fish_name')
             newfish.fish_species = request.POST.get('fish_species')
             newfish.weight =request.POST.get('weight')
             newfish.length =request.POST.get('length')
             newfish.lattitude =request.POST.get('lattitude')
             newfish.longitude =request.POST.get('longitude')
-            print(request.FILES)
+            
             if len(request.FILES)!=0:
                 newfish.img = request.FILES['img']
-                print(request.FILES['img'])
+                
             
             newfish.save()
-        
-        # simp_req = request.body.decode('utf-8')
-            # os.system('cmd /k "redis-server"')
-            # queue = Queue(connection=Redis())
-        # obj = json.loads(simp_req)
+            path = "images/"+str(request.FILES['img'])
+            obj.fish_id = newfish.fish_id
+            obj.img_name = path
+            obj.is_Resized =False
+            obj.save()
 
-        # new_obj = Fish(fish_name = obj['fish_name'],fish_species = obj['fish_species'],weight = obj['weight'],length=obj['length'],lattitude = obj['lattitude'],longitude = obj['longitude'])
-        # new_obj.save()
-        
-        path = "media/images/"+str(request.FILES['img'])
 
-        # for filename in os.listdir(path):
-        #     # print(filename, newfish.fish_id)
-        #     if filename.find(str(newfish.fish_id)) != -1:
-        #         process_image(cv2.imread(os.path.join(path, filename)),  140, 140,  newfish.fish_id)
-        #         break
-        
-        # job = queue.enqueue(process_image, cv2.imread(path),  140, 140,  newfish)
-        try:
-            process_image(cv2.imread(path),140,140,newfish)
-        except Exception:
-            t = threading.Thread(process_image, (cv2.imread(path),140,140,newfish))
-            t.start()
         return HttpResponse("record added")
     return render(request, './index.html')
 
-        # return HttpResponse("Entry added")
+
+
+
+def schedule(request):
+    if(request.method=='GET'):
+        path = "media/"
+        resp=[]
+        fishes = Fish.objects.all().order_by("timestamp")
+        for fish in fishes:
+            obj = ProcessedFish.objects.get(fish_id = fish.fish_id)
+            
+            if (obj.is_Resized==False):
+                try:
+                  process_image(cv2.imread(path+obj.img_name),140,140,fish)
+                except Exception:
+                  t = threading.Thread(process_image, (cv2.imread(path+obj.img_name),140,140,fish))
+                  t.start()
+
+                obj.is_Resized = True
+                obj.img_name=str("resized_images/"+str(fish.fish_id)+".png")
+                obj.save()
+        for fish in ProcessedFish.objects.all():
+                resp.append({"Fish id":fish.fish_id,"Resized":str(fish.is_Resized)})
+
+        return HttpResponse(json.dumps(resp))
+
+
+def get_processed_image (request,id):
+    if (request.method == 'GET'):
+        print("id", id)
+        image_path = "media/resized_images/"+str(id)
+
+        
+    with open(image_path, "rb") as image_file:
+        image_data = base64.b64encode(image_file.read()).decode('utf-8')
+
+    ctx={}
+    ctx["image"] = image_data
+    return render(request, 'image.html', ctx)
+
 
 
 def process_image(image, max_height, max_width, fish):
-    print("in process image func")
+    
 
     fish_id = fish.fish_id
     fish_name = fish.fish_name
@@ -87,47 +110,51 @@ def process_image(image, max_height, max_width, fish):
     ascept_ratio = height/width
 
     if ascept_ratio < 1:
-        # image height > image widthimage
+
         new_height = max_height
         new_width = new_height / ascept_ratio
     else:
-        # image height <= image widthimage
+
         new_width = max_width
         new_height = new_width * ascept_ratio
 
     new_image = cv2.resize(image, (int(new_height), int(new_width)))
 
     pa = "resized_images/"
-    cv2.imwrite(pa+str(fish_id)+".png",new_image)
+    cv2.imwrite("media/"+pa+str(fish_id)+".png",new_image)
     obj = Fish.objects.get(fish_id=fish_id)
-    obj.img=str(pa+str(fish_id)+".png")   #  = Fish(fish_id=fish_id,fish_name = fish_name,img=new_image,weight=weight,length=length,lattitude = lattitude,longitude=longitude,timestamp = timestamp)
-    print(obj)
+    obj.img=str(pa+str(fish_id)+".png")   
+   
     obj.save()
 
-    ## save image to database
     
 
-def store_image_in_db (fist_id):
-    pass
 
 def getallrecords(request):
 
     if(request.method=='GET'):
         resp = []
-        fishes = Fish.objects.all().order_by("timestamp")
-        # for fish in fishes:
-        #     pa = "resized_images/"+str(fish.fish_id)+".png"
-        #     fish_json = {"fish_id":fish.fish_id,"fish_name":fish.fish_name,"fish_species":fish.fish_species,"weight":fish.weight,"length":fish.length,"lattitude":fish.lattitude,"longitude":fish.longitude,"timestamp":fish.timestamp.strftime('%Y-%m%d %H:%M:%S'),"path":pa}
-        #     resp.append(fish_json)
-
-        #     # getimg(pa+str(fish.fish_id)+".png")
-        #     data = json.dumps(resp)
-        #     return HttpResponse(data)
-
+        fishes = Fish.objects.all().order_by("-timestamp")
+        
+        
         return render(request,'response.html',{"fishes":fishes})
 
+def getallrecordsjson(request):
+    if(request.method=='GET'):
+        resp = []
+        fishes = Fish.objects.all().order_by("-timestamp")
+        for fish in fishes:
+            print(fish.img)
+            pa = "media/resized_images/"+str(fish.fish_id)+".png"
+            fish_json = {"fish_id":fish.fish_id,"fish_name":fish.fish_name,"fish_species":fish.fish_species,"weight":fish.weight,"length":fish.length,"lattitude":fish.lattitude,"longitude":fish.longitude,"timestamp":fish.timestamp.strftime('%Y-%m%d %H:%M:%S'),"path":pa}
+            resp.append(fish_json)
 
-def getimg(path):
-    print("reached func")
-    return HttpResponse(cv2.imread(path),content_type="image/png")
+
+            data = json.dumps(resp)
+            return HttpResponse(data)
+        
+
+
+
+
 

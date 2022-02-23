@@ -2,7 +2,7 @@ from django.contrib import admin
 
 # Register your models here.
 from .models import Fish
-# from .models import FishImage
+from .models import ProcessedFish
 
 admin.site.register(Fish)
-# admin.site.register(FishImage)
+admin.site.register(ProcessedFish)

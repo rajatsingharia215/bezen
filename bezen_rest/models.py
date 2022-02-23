@@ -23,3 +23,8 @@ class Fish(models.Model):
 #     img_id = models.AutoField(primary_key=True)
 #     fish_id = models.ForeignKey(Fish)
 
+class ProcessedFish(models.Model):
+    _id = models.AutoField(primary_key=True)
+    img_name = models.CharField(max_length=150,default='')
+    is_Resized = models.BooleanField(default=False)
+    fish_id = models.IntegerField(default=0)
