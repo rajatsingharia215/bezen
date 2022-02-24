@@ -57,6 +57,7 @@ def addrecord(request):
 def schedule(request):
     if(request.method=='GET'):
         path = "media/"
+        
         resp=[]
         fishes = Fish.objects.all().order_by("timestamp")
         for fish in fishes:
@@ -64,13 +65,16 @@ def schedule(request):
             
             if (obj.is_Resized==False):
                 try:
-                  process_image(cv2.imread(path+obj.img_name),140,140,fish)
-                except Exception:
-                  t = threading.Thread(process_image, (cv2.imread(path+obj.img_name),140,140,fish))
-                  t.start()
+                    print("path", path+str(obj.img_name))
+                    process_image(cv2.imread(path+obj.img_name),140,140,fish)
+                except Exception as e:
+                    print(e)
+
+                    t = threading.Thread(process_image, (cv2.imread(path+obj.img_name),140,140,fish))
+                    t.start()
 
                 obj.is_Resized = True
-                obj.img_name=str("resized_images/"+str(fish.fish_id)+".png")
+                obj.img_name=str("images/"+str(fish.fish_id)+".png")
                 obj.save()
         for fish in ProcessedFish.objects.all():
                 resp.append({"Fish id":fish.fish_id,"Resized":str(fish.is_Resized)})
@@ -81,7 +85,7 @@ def schedule(request):
 def get_processed_image (request,id):
     if (request.method == 'GET'):
         print("id", id)
-        image_path = "media/resized_images/"+str(id)
+        image_path = "media/images/"+str(id)
 
         
     with open(image_path, "rb") as image_file:
@@ -119,12 +123,18 @@ def process_image(image, max_height, max_width, fish):
         new_height = new_width * ascept_ratio
 
     new_image = cv2.resize(image, (int(new_height), int(new_width)))
-
-    pa = "resized_images/"
-    cv2.imwrite("media/"+pa+str(fish_id)+".png",new_image)
+    
+    try:
+        
+        pa = "images/"
+        cv2.imwrite("media/"+pa+str(fish_id)+".png",new_image)
+        
+    except Exception:
+        # os.mkdir(os.path.join("media","resized_images"))
+        cv2.imwrite("media/"+pa+str(fish_id)+".png",new_image)
+        pass
     obj = Fish.objects.get(fish_id=fish_id)
     obj.img=str(pa+str(fish_id)+".png")   
-   
     obj.save()
 
     
