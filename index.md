@@ -1,37 +1,45 @@
-## Welcome to GitHub Pages
+# BEZEN BACKEND ASSIGNMENT
 
-You can use the [editor on GitHub](https://github.com/rajatsingharia215/bezen/edit/gh-pages/index.md) to maintain and preview the content for your website in Markdown files.
+[Hosted Link](https://bezenbkd.azurewebsites.net/)
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
+## Installation
+### LIBARRIES USED
+- open-cv
+- django
+- numpy
+- sqlite
+- json
+- request
+- python-decouple
+- other libraries are listed in requirement.txt
 
-### Markdown
 
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
+Clone this repository to run in your local machine
 
-```markdown
-Syntax highlighted code block
 
-# Header 1
-## Header 2
-### Header 3
+### Install libraries
 
-- Bulleted
-- List
-
-1. Numbered
-2. List
-
-**Bold** and _Italic_ and `Code` text
-
-[Link](url) and ![Image](src)
+```
+pip install -r requirements.txt
 ```
 
-For more details see [Basic writing and formatting syntax](https://docs.github.com/en/github/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax).
+### Run code
+```
+cd bezen_backend
+python manage.py runserver
+```
 
-### Jekyll Themes
+## routes
+1. [addrecord ](https://bezenbkd.azurewebsites.net/addrecord)
+A simple HTML page that asks for Fish name , species,weight,length,latitude,longitude and the image and after filling them and clicking on save button a response comes up saying "record added"
 
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/rajatsingharia215/bezen/settings/pages). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
+2. [schedule](https://bezenbkd.azurewebsites.net/schedule)
+This request will start the background process for image resizing and will provide a json response which will contain the fish id and whether it's corresponding image is resized or not
 
-### Support or Contact
+3. [getallrecords](https://bezenbkd.azurewebsites.net/getallrecords)
+An HTML page comes up with a table with columns fish name , fish id, fish species , weight, length,lattitude ,longitude,timestamp and resized img which will contain all the records. Resized img would contain different links and when you click on them you are able to see the resized img
 
-Having trouble with Pages? Check out our [documentation](https://docs.github.com/categories/github-pages-basics/) or [contact support](https://support.github.com/contact) and we’ll help you sort it out.
+4. [getallrecordsjson](https://bezenbkd.azurewebsites.net/getallrecordsjson)
+This will give you the respinse of all records in json format where img will be replaced by path as image cannot be sent in json therefore image is displayed using HTML page above
+
+SECRET KEY has not been provided so as to follow good practices
